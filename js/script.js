@@ -22,8 +22,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔒 كلمة مرور الإدارة (يمكنك تغييرها هنا)
-const ADMIN_PASSWORD = "Sk@Mltqy2026!Secure#"; 
+const ADMIN_PASSWORD = "2026"; 
 let allFeedbackData = [];
 
 // 📋 أسماء الجلسات والأساتذة
