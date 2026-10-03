@@ -8,7 +8,8 @@ import {
     query, 
     orderBy 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-// ✅ بيانات مشروعك الحقيقية
+
+// ⚠️ بيانات مشروع Firebase الخاصة بك
 const firebaseConfig = {
   apiKey: "AIzaSyC5UjzMRr9BOBtuBIbI6sThWtv3BI0HPzo",
   authDomain: "feedbacksoftskils.firebaseapp.com",
@@ -18,13 +19,14 @@ const firebaseConfig = {
   appId: "1:347396669754:web:54344c7c874b7cdb11d003"
 };
 
-// تهيئة Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app); // هذا هو المتغير الذي سنستخدمه للحفظ والقراءة
+const db = getFirestore(app);
 
-const ADMIN_PASSWORD = "skills2026"; // ⚠️ غيّرها!
+// 🔒 كلمة مرور الإدارة (يمكنك تغييرها هنا)
+const ADMIN_PASSWORD = "Sk@Mltqy2026!Secure#"; 
 let allFeedbackData = [];
 
+// 📋 أسماء الجلسات والأساتذة
 const SESSION_NAMES = {
     'session1': 'محاضرة: دور المهارات الناعمة في بناء الشخصية - أ. اسكندر زينب',
     'session2': 'ورشة: التسويق الإلكتروني والاتصال الفعال - أ. أحمد بن عدة',
@@ -38,8 +40,11 @@ const SESSION_NAMES = {
     'other': 'جلسة أخرى'
 };
 
+// ===== 1. إدارة تسجيل الدخول =====
 function checkSavedLogin() {
-    if (sessionStorage.getItem('adminLoggedIn') === 'true') showAdminPanel();
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+        showAdminPanel();
+    }
 }
 
 document.getElementById('loginBtn').addEventListener('click', () => {
@@ -73,10 +78,11 @@ function showAdminPanel() {
     loadAllData();
 }
 
+// ===== 2. تحميل البيانات =====
 async function loadAllData() {
     try {
         Swal.fire({
-            title: 'جاري التحميل...',
+            title: 'جاري تحميل البيانات...',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading(),
             customClass: { popup: 'swal-custom-popup' }
@@ -94,6 +100,7 @@ async function loadAllData() {
         renderAll();
         
     } catch (error) {
+        Swal.close();
         Swal.fire({
             icon: 'error',
             title: 'خطأ في التحميل',
@@ -111,6 +118,7 @@ function renderAll() {
     renderFeedbackList(allFeedbackData);
 }
 
+// ===== 3. دوال العرض (Rendering) =====
 function renderExecutiveSummary() {
     const data = allFeedbackData;
     if (data.length === 0) {
@@ -271,7 +279,9 @@ function renderSessions() {
         const avgVal = avgRating.length ? (avgRating.reduce((s, f) => s + f.sessionRating, 0) / avgRating.length).toFixed(1) : '—';
         const totalResponses = sessionData.length;
 
-        const speakerUrl = `/feedbackSpaker/?id=${sessionKey}`;
+        // 🔗 الرابط الصحيح والمطلق لصفحة المتحدث على Vercel
+        const SPEAKER_BASE_URL = "https://feedback-feedbackspaker.vercel.app";
+        const speakerUrl = `${SPEAKER_BASE_URL}/?id=${sessionKey}`;
 
         html += `
             <div class="session-card">
@@ -306,7 +316,7 @@ function renderFeedbackList(data) {
         document.getElementById('feedbackList').innerHTML = `
             <div class="empty-state">
                 <i class="fa-solid fa-inbox"></i>
-                <h3 class="fw-bold mt-3">لا توجد نتائج</h3>
+                <h3 class="fw-bold mt-3">لا توجد نتائج مطابقة</h3>
             </div>`;
         return;
     }
@@ -349,6 +359,7 @@ function renderFeedbackList(data) {
     `;
 }
 
+// ===== 4. الفلاتر =====
 document.getElementById('searchInput').addEventListener('input', applyFilters);
 document.getElementById('filterRole').addEventListener('change', applyFilters);
 document.getElementById('filterSession').addEventListener('change', applyFilters);
@@ -373,6 +384,7 @@ function applyFilters() {
     renderFeedbackList(filtered);
 }
 
+// ===== 5. التصدير والحذف =====
 document.getElementById('exportJsonBtn').addEventListener('click', async () => {
     try {
         const blob = new Blob([JSON.stringify(allFeedbackData, null, 2)], { type: 'application/json' });
@@ -382,14 +394,14 @@ document.getElementById('exportJsonBtn').addEventListener('click', async () => {
         a.download = `feedback_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        Swal.fire({ icon: 'success', title: 'تم التصدير', timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'تم التصدير بنجاح', timer: 1500, showConfirmButton: false });
     } catch (error) {
         Swal.fire({ icon: 'error', title: 'خطأ', text: error.message });
     }
 });
 
 document.getElementById('exportCsvBtn').addEventListener('click', () => {
-    let csv = '\uFEFF';
+    let csv = '\uFEFF'; // BOM للعربية
     csv += 'التاريخ,الاسم,الصفة,NPS,الجلسة,تقييم الجلسة,ملاحظات المتحدث,التنظيم,نقاط القوة,نقاط الضعف,اقتراحات,رسالة للأساتذة,رسالة للتنظيم\n';
     allFeedbackData.forEach(f => {
         const date = f.createdAt ? new Date(f.createdAt.seconds * 1000).toLocaleString('ar-EG') : '';
@@ -438,7 +450,7 @@ document.getElementById('clearDataBtn').addEventListener('click', async () => {
         const snapshot = await getDocs(q);
         const promises = snapshot.docs.map(d => deleteDoc(doc(db, "feedback", d.id)));
         await Promise.all(promises);
-        Swal.fire({ icon: 'success', title: 'تم الحذف', timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'تم الحذف بنجاح', timer: 1500, showConfirmButton: false });
         allFeedbackData = [];
         renderAll();
     } catch (error) {
@@ -448,4 +460,5 @@ document.getElementById('clearDataBtn').addEventListener('click', async () => {
 
 document.getElementById('refreshBtn').addEventListener('click', loadAllData);
 
+// ===== 6. بدء التشغيل =====
 checkSavedLogin();
